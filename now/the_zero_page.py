@@ -2,19 +2,21 @@ from lxml.html import fromstring
 from requests import Session
 
 
-def headersGenerator(headersFileName):
-    with open(headersFileName, 'r') as fh:
-        headers = {}
-        for line in fh:
-            line = line.strip().split(":")
-            if line[0] == 'User-Agent':
-                headers[line[0].strip()] = line[1].strip()
-                return headers
+# def headersGenerator(headersFileName):
+#     with open(headersFileName, 'r') as fh:
+#         headers = {}
+#         for line in fh:
+#             line = line.strip().split(":")
+#             if line[0] == 'User-Agent':
+#                 headers[line[0].strip()] = line[1].strip()
+#                 return headers
 
 
 def response(start_url):
     session = Session()
-    headers = headersGenerator('headers.txt')
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) \
+               AppleWebKit/537.36 (KHTML, like Gecko) \
+               Chrome/65.0.3311.3 Safari/537.36'}
     response = session.get(start_url, headers=headers)
     return response
 
