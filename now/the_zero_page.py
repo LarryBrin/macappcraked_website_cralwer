@@ -104,6 +104,7 @@ def download_urls(get_app_urls, titles):
     urls = {'newest_download_urls': [], 'previous_links': []}
     i = 0  # 用于索引titles中的各个title，以对html文件进行命名
     for url in get_app_urls:
+        sleep(1)
         print('-------Sleep time' * 5)
         print('Sleep 1.0s')
         print('-------Sleep over' * 5)
@@ -113,8 +114,9 @@ def download_urls(get_app_urls, titles):
         # creat_html_file
         title = titles[i]
         time_string = str(datetime.now())
-        with open('../pages_sources/htmlfiles/app_item_pages/' + time_string
-                  + title + '.html', 'w', encoding='UTF-8') as f:
+        with open('/Volumes/Transcent/Corpus/htmlfiles/app_item_pages/'
+                  + time_string + title + '.html', 'w',
+                  encoding='UTF-8') as f:
             f.writelines(html)
         # 抓取软件最新版本的下载链接
         newest_download_url = root.xpath(
@@ -179,7 +181,7 @@ def previous_donwload_urls(pre_link_urls):
                 urls.append(pairs)
         print('Finish', i + 1, 'app previous links')
         i += 1
-        # print('Finish',i, 'previous_donwload_url')
+        print('Finish', i, 'previous_donwload_url')
     print('')
     print("previous urls:", urls)
     print(len(urls))
@@ -190,15 +192,14 @@ if __name__ == '__main__':
     start_url = 'http://nmac.to'
     resp = response(start_url)
     root = get_root_html(resp)
-    print(root)
+    # print(root)
 
     # 保存网站主页面html文件
     parsed_time = datetime.now()
     html_file_name = str(parsed_time)
-    with open('../pages_sources/htmlfiles/main_pages/' +
+    with open('/Volumes/Transcent/Corpus/htmlfiles/main_pages/' +
               html_file_name + '.html', 'w', encoding='UTF-8') as f:
         f.writelines(resp)
-    # del response
 
     # 提取浏览量
     viewed_numbers = get_viewed_numbers(root)
@@ -222,24 +223,17 @@ if __name__ == '__main__':
     newest_urls = newest_download_urls(original_urls_to_be_deal)
     # 抓取先前版本的下载地址
     previous_link_urls = previous_link_urls(original_urls_to_be_deal)
-    previous_donwload_urls = previous_donwload_urls(previous_link_urls)
+    previous_urls = previous_donwload_urls(previous_link_urls)
     # 合并下载链接，最新版下载地址排前
-    # urls = newest_download_urls.extend(previous_donwload_urls)
-    urls = newest_urls
-    # i = 0
-    # for newest in newest_urls:
-    #     urls.append([newest])
-    #     urls[i].append(previous_donwload_urls[i])
-    #     i += 1
-    # print(urls)
+    urls = list(zip(newest_urls, previous_urls))
 
     # 预处理存入csv的数据
     csv_data = list(zip(titles, meta_infos, times, viewed_numbers,
                         urls))
 
     # 生成csv文件
-    if not os.path.exists('../pages_sources/csvfiles/meta_info.csv'):
-        with open('../pages_sources/csvfiles/meta_info.csv', 'a',
+    if not os.path.exists('/Volumes/Transcent/Corpus/csvfiles/meta_info.csv'):
+        with open('/Volumes/Transcent/Corpus/csvfiles/meta_info.csv', 'a',
                   encoding='UTF-8') as fil:
             handler = csv.writer(fil)
             handler.writerow(('title', 'meta_info', 'time',
@@ -253,7 +247,7 @@ if __name__ == '__main__':
             handler.writerows(csv_data)
 
     else:
-        with open('../pages_sources/csvfiles/meta_info.csv', 'a',
+        with open('/Volumes/Transcent/Corpus/csvfiles/meta_info.csv', 'a',
                   encoding='UTF-8') as fil:
             handler = csv.writer(fil)
             # for data in csv_data:
