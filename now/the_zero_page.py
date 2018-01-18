@@ -113,8 +113,8 @@ def download_urls(get_app_urls, titles):
         # creat_html_file
         title = titles[i]
         time_string = str(datetime.now())
-        with open('../pages_sources/htmlfiles/app_item_pages/' + title
-                  + time_string + '.html', 'w', encoding='UTF-8') as f:
+        with open('../pages_sources/htmlfiles/app_item_pages/' + time_string
+                  + title + '.html', 'w', encoding='UTF-8') as f:
             f.writelines(html)
         # 抓取软件最新版本的下载链接
         newest_download_url = root.xpath(
@@ -123,16 +123,17 @@ def download_urls(get_app_urls, titles):
         # 抓取软件先前版本的下载链接（如果有）
         previous_link_url = root.xpath(
             '//div/a[text()="Previous Versions"]/@href')
-        print('')
-        print('previous_link_url:', previous_link_url)
-        print('')
         if previous_link_url:
             from urllib.parse import urljoin
             previous_link_url = urljoin(
                 'https://nmac.to/', previous_link_url[0])
             urls['previous_links'].append(previous_link_url)
         else:
-            previous_link_url.append('None')
+            previous_link_url = 'None'
+            urls['previous_links'].append(['None'])
+        print('')
+        print('previous_link_url:', previous_link_url)
+        print('')
         print("Finish", i + 1, 'newest and previous links')
         i += 1
         # sleep(0.6)
@@ -161,18 +162,21 @@ def previous_donwload_urls(pre_link_urls):
         print('-------Sleep time' * 5)
         sleep(1.5)
         print('-------Sleep over' * 5)
-        if url == 'None':
-            urls.append('None')
+        if url == ['None']:
+            urls.append(['None'])
             print('previous url is None')
         else:
             previous_donwload_response = response(url)
             root = get_root_html(previous_donwload_response)
-            # versions = root.xpath('//a[@class="accordion-toggle"]/text()')
+            version = root.xpath('//a[@class="accordion-toggle"]/text()')
             urls_list = root.xpath('//a[text()=" Sendit.cloud"]/@href')
             if urls_list:
-                urls.append(urls_list)
+                pairs = list(zip(version, urls_list))
+                urls.append(pairs)
             else:
-                urls.append('None')
+                urls_list = ['None']
+                pairs = list(zip(version, urls_list))
+                urls.append(pairs)
         print('Finish', i + 1, 'app previous links')
         i += 1
         # print('Finish',i, 'previous_donwload_url')
