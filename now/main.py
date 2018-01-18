@@ -16,6 +16,14 @@ with open('../pages_sources/htmlfiles/main_pages' +
     f.writelines(response.text)
 del response
 
+
+
+
+
+from requests import Session
+
+session = Session()
+hr =
 # 提取浏览量
 viewed_numbers = get_viewed_numbers(root)
 
