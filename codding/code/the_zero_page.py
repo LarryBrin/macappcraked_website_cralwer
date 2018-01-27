@@ -1,5 +1,5 @@
-# import re
 import csv
+import sqlite3
 import os.path
 from datetime import datetime
 from time import sleep
@@ -10,17 +10,18 @@ from requests import Session
 from lxml.html import fromstring
 
 MAIN_PAGE_PATH = '/Users/larrybrin/Public/git/macappcraked_website_cralwer/codding/corpus/htmlfiles/main_pages/'
-APP_ITEM_PAGE_PATH = '/Users/larrybrin/Public/git/macappcraked_website_cralwer/\codding/corpus/htmlfiles/app_item_pages/'
-CSV_PATH = '/Users/larrybrin/Public/git/macappcraked_website_cralwer/codding/corpus/csvfiles/meta_info.csv'
-START_RUL = 'https://nmac.to'
+APP_ITEM_PAGE_PATH = '/Users/larrybrin/Public/git/macappcraked_website_cralwer/codding/corpus/htmlfiles/app_item_pages/'
+CSV_PATH = '/Users/larrybrin/Public/git/macappcraked_website_cralwer/codding/corpus/csvfiles/'
+BASE_URL = 'http://nmac.to/'
+HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) \
+               AppleWebKit/537.36 (KHTML, like Gecko) \
+               Chrome/65.0.3311.3 Safari/537.36'}
 
 
 def response(start_url):
+    global HEADERS
     session = Session()
-    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) \
-               AppleWebKit/537.36 (KHTML, like Gecko) \
-               Chrome/65.0.3311.3 Safari/537.36'}
-    resp = session.get(start_url, headers=headers)
+    resp = session.get(start_url, headers=HEADERS)
     return resp.text
 
 
@@ -85,22 +86,20 @@ def get_app_urls(root):
 def download_urls(get_app_urls, titles):
     # 抓取最新版本软件的下载地址以及先前版本下载地址的导向链接，同时保存response生成各软件
     # 的主页面html文件
-    sleep(1.0)
+    global APP_ITEM_PAGE_PATH
     urls = {'newest_download_urls': [], 'previous_links': []}
     i = 0  # 用于索引titles中的各个title，以对html文件进行命名
     for url in get_app_urls:
-        sleep(1)
-        print('-------Sleep time' * 5)
-        print('Sleep 1.0s')
-        print('-------Sleep over' * 5)
+        print('\n-------------------Sleep 1.0s--------------------\n')
+        sleep(1.0)
         app_main_page_response = response(url)
         html = app_main_page_response
         root = get_root_html(app_main_page_response)
         # creat_html_file
         title = titles[i]  # 作为html文件名的头部
-        time_string = str(datetime.now()).split('.')[0]  # 作为html文件名的副部
-        with open(APP_ITEM_PAGE_PATH + time_string +
-                  title + '.html', 'w', encoding='UTF-8') as f:
+        time_string = str(datetime.now()).split(' ')[0]  # 作为html文件名的副部
+        with open(APP_ITEM_PAGE_PATH + time_string + title + '.html', 'w',
+                  encoding='UTF-8') as f:
             f.writelines(html)
         # 抓取软件最新版本的下载链接
         newest_download_url = root.xpath(
@@ -116,10 +115,8 @@ def download_urls(get_app_urls, titles):
         else:
             previous_link_url = 'None'
             urls['previous_links'].append(['None'])
-        print('')
-        print('previous_link_url:', previous_link_url)
-        print('')
-        print("Finish", i + 1, 'newest and previous links')
+        print('\nprevious_link_url:', previous_link_url)
+        print("\nFinish", i + 1, 'newest and previous links')
         i += 1
         # sleep(0.6)
     return urls
@@ -144,11 +141,11 @@ def previous_donwload_urls(pre_link_urls):
     urls = []
     i = 0
     for url in pre_link_urls:
-        print('-------Sleep time' * 5)
+        print('\n-------------------Sleep 1.5s-------------------\n')
         sleep(1.5)
-        print('-------Sleep over' * 5)
         if url == ['None']:
-            urls.append(['None'])
+            urls.append(['\nNone'])
+
             print('previous url is None')
         else:
             previous_donwload_response = response(url)
@@ -172,13 +169,14 @@ def previous_donwload_urls(pre_link_urls):
 
 
 def main_page_items(start_url):
+    # 抓取主页各个应用的条目信息
+    global MAIN_PAGE_PATH
     resp = response(start_url)
     root = get_root_html(resp)
-    # print(root)
 
     # 保存网站主页面html文件
     parsed_time = datetime.now()
-    html_file_name = str(parsed_time)
+    html_file_name = str(parsed_time).split('.')[0]
     with open(MAIN_PAGE_PATH + html_file_name + '.html', 'w',
               encoding='UTF-8') as f:
         f.writelines(resp)
@@ -217,19 +215,120 @@ def get_item_details(app_urls, titles):
 
 def generate_scv_file(csv_data):
     # 生成csv文件
-    if not os.path.exists(CSV_PATH):
-        with open(CSV_PATH, 'a', encoding='UTF-8') as fil:
+    global CSV_PATH
+    if not os.path.exists(CSV_PATH + 'meta_info.csv'):
+        with open(CSV_PATH + 'meta_info.csv', 'a', encoding='UTF-8') as fil:
             handler = csv.writer(fil)
             handler.writerow(('title', 'meta_info', 'time',
                               'viewed_number', 'url', 'content'))
             handler.writerows(csv_data)
 
     else:
-        with open(CSV_PATH, 'a', encoding='UTF-8') as fil:
+        with open(CSV_PATH + 'meta_info.csv', 'a', encoding='UTF-8') as fil:
             handler = csv.writer(fil)
             handler.writerows(csv_data)
-    return
 
+
+def crawling(url, already_stored_items, previously_crawled_number,
+             start_num=2, page_number=None, new_crawled_item_number=0):
+    # 执行抓取进程
+    new_titles = []  # 本次爬取的新的需要存储的应用条目
+    main_page_info = main_page_items(url)  # 调用 main_apge_tiems 函数.
+    titles = main_page_info[0]
+    home_page_items_number = len(titles)  # 抓页面条目数量，为确定后续抓取切入点作准备
+
+    for title in titles:
+        title_split = title.rsplit(sep=' ', maxsplit=1)
+        app_name = title_split[0]
+        app_version_str = title_split[1].strip().split('.')
+        item_num = len(app_version_str)
+        app_version_set = {int(item) for item in app_version_str}
+        if app_name not in already_stored_items:
+            new_titles.append(title)
+            new_crawled_item_number += 1
+        elif app_name in already_stored_items and app_version_set > already_stored_items[app_name]:
+            new_titles.append(title)
+            new_crawled_item_number += 1
+        elif app_name in already_stored_items and app_version_set < already_stored_items[app_name]:
+            new_crawled_item_number += 1
+        elif app_name in already_stored_items and app_version_set == already_stored_items[app_name]:
+            jump_to_page_havent_been_crawled = True
+
+    # 根据上述判断开始爬取未爬取的应用条目
+    should_be_crawled_items_number = len(new_titles)
+    app_urls = main_page_info[-1][:should_be_crawled_items_number]
+    urls = get_item_details(app_urls, new_titles)
+    meta_infos = main_page_info[1]
+    times = main_page_info[2]
+    viewed_numbers = main_page_info[3]
+    contents = main_page_info[-2]
+    data = list(zip(new_titles, meta_infos, viewed_numbers,
+                    times, urls, contents))
+
+    # 存储本地数据
+    generate_scv_file(data)
+    storing_data_in_db(data)
+
+    # 判断是连续爬取还是跳转爬取
+    try:
+        if jump_to_page_havent_been_crawled:  # 跳转爬取
+            url = start_url(page_number)
+    except NameError as e:
+            url = start_url(start_num)
+            have_been_crawed_items_number = previously_crawled_number + new_crawled_item_number
+            page_number = math.floor(have_been_crawed_items_number / home_page_items_number)
+    else:
+        print('There is some fatal error, Check it!')
+        # break
+    finally:
+        crawling(url, already_stored_items, previously_crawled_number,page_number=page_number)
+        start_num += 1
+        page_number += 1
+
+
+def start_url(page_number):
+    # 生成下一个需要爬取的主页面地址
+    return urljoin(base_url, 'page/' + str(page_number))
+
+
+def get_already_stored_items_and_app_number():
+    global CSV_PATH
+    app_items = {}
+    app_num = 0
+    try:
+        with open(CSV_PATH + 'meta_info.csv', 'rt', encoding="UTF-8") as f:
+            import re
+            pattern = re.compile('(^.*?),')
+            for line in f:
+                item = pattern.findall(line)[0]
+                item_split = item.rsplit(sep=' ', maxsplit=1)
+                version_str = item_split[1]
+                dot_split = version_str.split('.')
+                version_set = {int(item) for item in dot_split}
+                app_items[item_split[0]] = version_set
+                app_num += 1
+            return app_items, app_num
+    except FileNotFoundError as e:
+        return {}, 0
+
+
+def storing_data_in_db(data):
+    """创建数据库表格"""
+    conn = sqlite3.connect(CSV_PATH + 'app_information.sqlite')
+    cur = conn.cursor()
+    cur.execute('''CREATE TABLE IF NOT EXISTS App_info (title text, meta_info text,
+                viewed_number text, posted_time text, url text, content text)''')
+    for item in data:
+        new_title, meta_info, viewed_number, posted_time, url, content = item
+        cur.execute("INSERT INTO App_info VALUES (?, ?, ?, ?, ?, ?)",
+                    (str(new_title), str(meta_info), str(viewed_number),
+                     str(posted_time), str(url), str(content)))
+    conn.commit()
+    # conn.close()
 
 if __name__ == '__main__':
-    pass
+    already_stored_items_and_app_number = get_already_stored_items_and_app_number()
+    already_stored_items = already_stored_items_and_app_number[0]
+    previously_crawled_number = already_stored_items_and_app_number[1]
+    url = BASE_URL
+    crawling(url, already_stored_items, previously_crawled_number)
