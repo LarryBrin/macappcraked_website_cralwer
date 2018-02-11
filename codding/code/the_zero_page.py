@@ -13,9 +13,11 @@ from urllib.parse import urljoin
 from lxml.html import fromstring
 from requests import Session
 
-MAIN_PAGE_PATH = '/Users/larrybrin/Public/git/macappcraked_website_cralwer/codding/corpus/htmlfiles/main_pages/'
-APP_ITEM_PAGE_PATH = '/Users/larrybrin/Public/git/macappcraked_website_cralwer/codding/corpus/htmlfiles/app_item_pages/'
-CSS_PATH = '/Users/larrybrin/Public/git/macappcraked_website_cralwer/codding/corpus/csvfiles/'
+user = os.environ['USER']
+
+MAIN_PAGE_PATH = '/Users/{}/Public/git/macappcraked_website_cralwer/codding/corpus/htmlfiles/main_pages/'.format(user)
+APP_ITEM_PAGE_PATH = '/Users/{}/Public/git/macappcraked_website_cralwer/codding/corpus/htmlfiles/app_item_pages/'.format(user)
+CSS_PATH = '/Users/{}/Public/git/macappcraked_website_cralwer/codding/corpus/csvfiles/'.format(user)
 BASE_URL = 'http://nmac.to/'
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) \
                AppleWebKit/537.36 (KHTML, like Gecko) \
