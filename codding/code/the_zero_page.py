@@ -17,7 +17,7 @@ user = os.environ['USER']
 
 MAIN_PAGE_PATH = '/Users/{}/Public/git/macappcraked_website_cralwer/codding/corpus/htmlfiles/main_pages/'.format(user)
 APP_ITEM_PAGE_PATH = '/Users/{}/Public/git/macappcraked_website_cralwer/codding/corpus/htmlfiles/app_item_pages/'.format(user)
-CSS_PATH = '/Users/{}/Public/git/macappcraked_website_cralwer/codding/corpus/csvfiles/'.format(user)
+CSV_PATH = '/Users/{}/Public/git/macappcraked_website_cralwer/codding/corpus/csvfiles/'.format(user)
 BASE_URL = 'http://nmac.to/'
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) \
                AppleWebKit/537.36 (KHTML, like Gecko) \
@@ -143,8 +143,8 @@ def download_urls(get_app_urls, titles):
     urls = {'newest_download_urls': [], 'previous_links': []}
     i = 0  # 用于索引titles中的各个title，以对html文件进行命名
     for url in get_app_urls:
-        print('-------------------Sleep 0.5s--------------------')
-        sleep(0.5)
+        print('-------------------Sleep 0.8s--------------------')
+        sleep(0.8)
         app_main_page_response = response(url)
         html = app_main_page_response
         root = get_root_html(app_main_page_response)
@@ -276,8 +276,8 @@ def get_item_details(app_urls, titles):
 
 def generate_scv_file(csv_data):
     # 生成csv文件
-    global CSS_PATH
-    with open(CSS_PATH + 'meta_info.csv', 'a', encoding='UTF-8') as fil:
+    global CSV_PATH
+    with open(CSV_PATH + 'meta_info.csv', 'a', encoding='UTF-8') as fil:
         handler = csv.writer(fil)
         handler.writerows(csv_data)
 
