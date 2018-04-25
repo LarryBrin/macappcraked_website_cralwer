@@ -11,7 +11,7 @@ a = cur.fetchall()
 
 # for item in a:
 #     print(item[0], item[1], '\n')
-b = json.dumps(a)
+b = json.dumps(a·
 
 
 with open('app_name_and_viwed_number.json', 'w', encoding='utf-8') as f:

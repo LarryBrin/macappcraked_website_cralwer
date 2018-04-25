@@ -25,7 +25,7 @@ HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) \
 
 
 def response(start_url):
-    global HEADERS
+    # global HEADERS
     session = Session()
     resp = session.get(start_url, headers=HEADERS)
     return resp.text
@@ -41,7 +41,7 @@ def get_viewed_numbers(root):
     # 抓取被浏览的次数
     # 返回一个含有十个元素的list
     numbers = root.xpath('//span[@class="numcount"]/text()')
-    if len(numbers) == 10:
+    if len(numbers) <= 10:   #  把==改为了<=
         return numbers
     else:
         for _ in range(len(numbers) - 10):
@@ -50,7 +50,7 @@ def get_viewed_numbers(root):
 
 
 def get_posted_time(root):
-    # 抓取发布的事件
+    # 抓取发布的时间
     # 返回一个含有十个元素的list
     posted_time = []
     posted_time_strings = root.xpath('//span[@class="meta-info"]/text()')
